@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Sandeep Pakala - Portfolio
 
-TODO: Document your project here
+Personal portfolio built with React, Vite and Tailwind CSS.
