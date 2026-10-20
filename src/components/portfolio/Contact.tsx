@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Github, Linkedin, Mail, Phone } from "lucide-react";
 import { z } from "zod";
 import { toast } from "@/hooks/use-toast";
@@ -27,7 +27,7 @@ const Contact = () => {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = schema.safeParse(form);
 
@@ -44,14 +44,34 @@ const Contact = () => {
 
     setBusy(true);
     const { name, email, subject, message } = parsed.data;
-    const mailto = `mailto:sandeeppakala76@gmail.com?subject=${encodeURIComponent(subject || "Portfolio enquiry")}&body=${encodeURIComponent(`Hi Sandeep,\n\n${message}\n\n— ${name} (${email})`)}`;
-    window.location.href = mailto;
-    toast({ title: "Opening email app", description: "Your message is ready to send." });
-    setForm(initialForm);
-    setErrors({});
-    setTimeout(() => setBusy(false), 800);
-  };
 
+    try {
+      const response = await fetch("https://formspree.io/f/xdearzlo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          _subject: subject || "Portfolio enquiry",
+          message,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Request failed");
+
+      toast({ title: "Message sent!", description: "Thanks for reaching out. I'll get back to you soon." });
+      setForm(initialForm);
+      setErrors({});
+    } catch {
+      toast({
+        title: "Could not send message",
+        description: "Please try again or email me directly at sandeeppakala76@gmail.com.",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
   const inputClass = (field: keyof FormData) =>
     `w-full rounded-lg border bg-input/60 px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors ${
       errors[field] ? "border-destructive focus:border-destructive" : "border-border focus:border-primary"
@@ -113,7 +133,7 @@ const Contact = () => {
               </div>
             </div>
             <button type="submit" disabled={busy} className="neon-button w-full rounded-full py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-60">
-              {busy ? "Opening email…" : "Submit"}
+              {busy ? "Sending..." : "Submit"}
             </button>
           </form>
         </div>
